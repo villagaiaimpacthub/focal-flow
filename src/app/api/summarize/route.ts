@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
           const mistral = new Mistral({ apiKey })
 
           const completion = await mistral.chat.complete({
-            // Using Mistral Small for cost-effective summaries
+            // Using Mistral Small 3.2 for cost-effective summaries
             // 94% cheaper than Claude Haiku 4.5 ($0.06/$0.18 vs $1.00/$5.00)
-            model: 'mistral-small-latest',
+            model: 'mistral-small-2506',
             messages: [
               {
                 role: 'user',
