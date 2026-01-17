@@ -83,8 +83,8 @@ export async function parsePdf(file: File): Promise<ParseResult> {
   // Dynamic import for client-side only
   const pdfjs = await import('pdfjs-dist')
 
-  // Set worker source
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+  // Set worker source - use local copy in public folder
+  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
   const arrayBuffer = await file.arrayBuffer()
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
@@ -141,9 +141,8 @@ export async function parsePdf(file: File): Promise<ParseResult> {
 
   const words = splitIntoWords(fullText)
 
-  // Try to get title from PDF metadata or filename
-  const metadata = await pdf.getMetadata().catch(() => null)
-  const title = (metadata?.info as { Title?: string } | undefined)?.Title || file.name.replace(/\.pdf$/i, '')
+  // Use filename as title (PDF metadata is often unreliable/unhelpful)
+  const title = file.name.replace(/\.pdf$/i, '')
 
   return {
     title,

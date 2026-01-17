@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { JetBrains_Mono, Inter } from "next/font/google"
+import { AccentColorProvider } from "@/components/AccentColorProvider"
 import "./globals.css"
 
 const inter = Inter({
@@ -40,7 +41,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
+        <AccentColorProvider>
+          {children}
+        </AccentColorProvider>
       </body>
     </html>
   )

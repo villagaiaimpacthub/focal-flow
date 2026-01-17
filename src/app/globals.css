@@ -5,6 +5,8 @@
   --foreground: #FFFFFF;
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
+  --accent-color: #E53E3E;
+  --accent-rgb: 229, 62, 62;
 }
 
 @theme inline {
@@ -70,7 +72,7 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #E53E3E;
+  background: var(--accent-color);
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.1s;
@@ -83,7 +85,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #E53E3E;
+  background: var(--accent-color);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -91,6 +93,9 @@ input[type="range"]::-moz-range-thumb {
 
 /* Select styling for dark theme */
 select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
@@ -103,10 +108,24 @@ select option {
   color: #FFFFFF;
 }
 
+/* Button cursor */
+button,
+[role="button"],
+a {
+  cursor: pointer;
+}
+
 /* Focus styles */
 *:focus-visible {
-  outline: 2px solid #E53E3E;
+  outline: 2px solid var(--accent-color);
   outline-offset: 2px;
+}
+
+/* Remove outline for inputs/selects that use border-based focus */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* Animation for loading states */
@@ -126,4 +145,150 @@ select option {
 /* Monospace font for word display */
 .font-mono {
   font-family: var(--font-mono), 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Accent color utilities */
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+.bg-accent-20 {
+  background-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.text-accent {
+  color: var(--accent-color);
+}
+
+.border-accent {
+  border-color: var(--accent-color);
+}
+
+.ring-accent {
+  --tw-ring-color: var(--accent-color);
+}
+
+/* Hover variants */
+.hover\:bg-accent:hover {
+  background-color: var(--accent-color);
+}
+
+.hover\:bg-accent-dark:hover {
+  background-color: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+/* Focus variants */
+.focus\:border-accent:focus {
+  border-color: var(--accent-color);
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Safe area handling for notched devices */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch-friendly minimum sizes */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Prevent text selection during gestures */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Improve touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Range input - larger touch targets on mobile */
+@media (max-width: 768px) {
+  input[type="range"] {
+    height: 8px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Prevent pull-to-refresh on reader page */
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
+/* Disable iOS text size adjusting */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 640px) {
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  .mobile-stack {
+    flex-direction: column;
+  }
+
+  .mobile-hidden {
+    display: none;
+  }
+
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+
+  .mobile-p-2 {
+    padding: 0.5rem;
+  }
+
+  .mobile-gap-1 {
+    gap: 0.25rem;
+  }
+}
+
+/* Landscape mode on mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+  .landscape-compact {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }

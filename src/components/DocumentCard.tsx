@@ -1,6 +1,7 @@
 'use client'
 
 import { FileText, Clock, BookOpen, Trash2 } from 'lucide-react'
+import { useReaderStore } from '@/store/reader'
 import type { Document, ReadingProgress } from '@/types/database'
 
 interface DocumentCardProps {
@@ -24,6 +25,8 @@ export function DocumentCard({
     ? Math.round((progress.word_index / document.word_count) * 100)
     : 0
 
+  const { speed } = useReaderStore()
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never read'
     const date = new Date(dateString)
@@ -36,7 +39,7 @@ export function DocumentCard({
     return date.toLocaleDateString()
   }
 
-  const estimatedReadTime = Math.ceil(document.word_count / 300) // Assuming 300 WPM
+  const estimatedReadTime = Math.ceil(document.word_count / speed)
 
   return (
     <div
@@ -52,8 +55,8 @@ export function DocumentCard({
           style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
         >
           <div
-            className="h-full bg-red-500 transition-all"
-            style={{ width: `${progressPercent}%` }}
+            className="h-full transition-all"
+            style={{ width: `${progressPercent}%`, backgroundColor: 'var(--accent-color)' }}
           />
         </div>
       )}
@@ -65,9 +68,10 @@ export function DocumentCard({
             e.stopPropagation()
             onDelete(document)
           }}
-          className="absolute top-2 right-2 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity bg-red-500/20 hover:bg-red-500/40"
+          className="absolute top-2 right-2 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.2)' }}
         >
-          <Trash2 className="w-4 h-4 text-red-400" />
+          <Trash2 className="w-4 h-4" style={{ color: 'var(--accent-color)' }} />
         </button>
       )}
 
@@ -75,9 +79,9 @@ export function DocumentCard({
       <div className="flex items-start gap-3 mb-3">
         <div
           className="p-2 rounded-lg"
-          style={{ backgroundColor: isDark ? 'rgba(229,62,62,0.2)' : 'rgba(229,62,62,0.1)' }}
+          style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.2)' }}
         >
-          <FileText className="w-5 h-5 text-red-500" />
+          <FileText className="w-5 h-5" style={{ color: 'var(--accent-color)' }} />
         </div>
         <div className="flex-1 min-w-0">
           <h3
@@ -100,16 +104,16 @@ export function DocumentCard({
         className="flex items-center gap-4 text-xs mb-4"
         style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" title={`Estimated at ${speed} WPM`}>
           <Clock className="w-3 h-3" />
-          <span>{estimatedReadTime} min</span>
+          <span>{estimatedReadTime} min @ {speed} WPM</span>
         </div>
         <div className="flex items-center gap-1">
           <BookOpen className="w-3 h-3" />
           <span>{formatDate(document.last_read_at)}</span>
         </div>
         {progressPercent > 0 && (
-          <span className="text-red-400">{progressPercent}% complete</span>
+          <span style={{ color: 'var(--accent-color)' }}>{progressPercent}% complete</span>
         )}
       </div>
 
@@ -117,7 +121,8 @@ export function DocumentCard({
       <div className="flex gap-2">
         <button
           onClick={() => onRead(document)}
-          className="flex-1 py-2 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+          className="flex-1 py-2 px-4 rounded-lg text-white text-sm font-medium transition-colors hover:brightness-110"
+          style={{ backgroundColor: 'var(--accent-color)' }}
         >
           {progressPercent > 0 && progressPercent < 100 ? 'Continue' : 'Read'}
         </button>

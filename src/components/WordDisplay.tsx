@@ -6,27 +6,33 @@ import { useReaderStore } from '@/store/reader'
 interface WordDisplayProps {
   word?: string
   anchorPreference?: number
+  screenPosition?: number
   fontSize?: number
-  showAnchorLine?: boolean
+  anchorColor?: string
 }
 
 export function WordDisplay({
   word: propWord,
   anchorPreference: propAnchor,
+  screenPosition: propScreenPosition,
   fontSize: propFontSize,
-  showAnchorLine = true
+  anchorColor: propAnchorColor
 }: WordDisplayProps) {
   const {
     words,
     currentWordIndex,
     anchorPosition: storeAnchor,
+    screenPosition: storeScreenPosition,
     fontSize: storeFontSize,
-    theme
+    theme,
+    anchorColor: storeAnchorColor
   } = useReaderStore()
 
   const word = propWord ?? words[currentWordIndex] ?? ''
   const anchorPreference = propAnchor ?? storeAnchor
+  const screenPosition = propScreenPosition ?? storeScreenPosition
   const fontSize = propFontSize ?? storeFontSize
+  const anchorColor = propAnchorColor ?? storeAnchorColor
 
   const { before, anchor, after, anchorIndex } = useMemo(() => {
     if (!word) {
@@ -76,22 +82,11 @@ export function WordDisplay({
         fontFamily: "'JetBrains Mono', 'SF Mono', monospace"
       }}
     >
-      {/* Vertical anchor line */}
-      {showAnchorLine && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{
-            height: `${fontSize * 1.5}px`,
-            width: '2px',
-            backgroundColor: 'rgba(229, 62, 62, 0.3)'
-          }}
-        />
-      )}
-
-      {/* Word container - positioned so anchor lands at center */}
+      {/* Word container - positioned so anchor lands at screenPosition */}
       <div
-        className="absolute left-1/2 whitespace-nowrap"
+        className="absolute whitespace-nowrap"
         style={{
+          left: `${screenPosition * 100}%`,
           fontSize: `${fontSize}px`,
           // For monospace: offset by character count using ch unit
           transform: `translateX(-${anchorIndex}ch) translateX(-0.5ch)`
@@ -100,7 +95,7 @@ export function WordDisplay({
         <span style={{ color: isDark ? '#FFFFFF' : '#1A1A1A' }}>
           {before}
         </span>
-        <span style={{ color: '#E53E3E', fontWeight: 'bold' }}>
+        <span style={{ color: anchorColor, fontWeight: 'bold' }}>
           {anchor}
         </span>
         <span style={{ color: isDark ? '#FFFFFF' : '#1A1A1A' }}>

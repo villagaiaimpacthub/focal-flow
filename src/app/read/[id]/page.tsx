@@ -4,14 +4,17 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, X, Play, BookOpen } from 'lucide-react'
 import { WordDisplay } from '@/components/WordDisplay'
 import { ControlBar } from '@/components/ControlBar'
 import { SettingsPanel } from '@/components/SettingsPanel'
 import { CatchMeUpModal } from '@/components/CatchMeUpModal'
-import { useReaderStore } from '@/store/reader'
+import { useReaderStore, getWordDisplayTime } from '@/store/reader'
+import { usePreferencesSync } from '@/hooks/usePreferencesSync'
+import { useSwipeGesture } from '@/hooks/useSwipeGesture'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import type { Document, ReadingProgress } from '@/types/database'
 
 export default function ReadPage() {
   const params = useParams()
@@ -22,24 +25,41 @@ export default function ReadPage() {
   const [loading, setLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const [showCatchMeUp, setShowCatchMeUp] = useState(false)
+  const [showFileList, setShowFileList] = useState(false)
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [progressMap, setProgressMap] = useState<Record<string, ReadingProgress>>({})
 
   const supabase = createClient()
+
+  // Sync preferences with database for authenticated users
+  usePreferencesSync(user)
 
   const {
     words,
     currentWordIndex,
     isPlaying,
     speed,
+    timing,
     setDocument,
     setCurrentWordIndex,
     incrementWordIndex,
+    togglePlaying,
+    skipForward,
+    skipBackward,
     theme
   } = useReaderStore()
+
+  // Swipe gestures for mobile navigation
+  useSwipeGesture({
+    onSwipeLeft: skipForward,   // Swipe left = next sentence
+    onSwipeRight: skipBackward, // Swipe right = previous sentence
+  })
 
   // Refs for tracking
   const sessionStartRef = useRef<{ index: number; time: number } | null>(null)
   const lastSavedIndexRef = useRef(0)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const userRef = useRef<User | null>(null)
 
   // Keep userRef in sync
@@ -150,7 +170,7 @@ export default function ReadPage() {
     sessionStartRef.current = null
   }, [id, supabase])
 
-  // Playback loop
+  // Playback loop with adaptive timing
   useEffect(() => {
     if (!isPlaying || words.length === 0) return
 
@@ -159,12 +179,26 @@ export default function ReadPage() {
       sessionStartRef.current = { index: currentWordIndex, time: Date.now() }
     }
 
-    const interval = setInterval(() => {
-      incrementWordIndex()
-    }, (60 / speed) * 1000)
+    // Schedule next word with adaptive timing
+    const scheduleNextWord = () => {
+      const currentWord = words[currentWordIndex]
+      if (!currentWord) return
 
-    return () => clearInterval(interval)
-  }, [isPlaying, speed, words.length, incrementWordIndex, currentWordIndex])
+      const displayTime = getWordDisplayTime(currentWord, speed, timing)
+
+      playbackTimeoutRef.current = setTimeout(() => {
+        incrementWordIndex()
+      }, displayTime)
+    }
+
+    scheduleNextWord()
+
+    return () => {
+      if (playbackTimeoutRef.current) {
+        clearTimeout(playbackTimeoutRef.current)
+      }
+    }
+  }, [isPlaying, speed, timing, words, currentWordIndex, incrementWordIndex])
 
   // Debounced auto-save progress every 5 words
   useEffect(() => {
@@ -278,6 +312,58 @@ export default function ReadPage() {
     return words.slice(0, currentWordIndex).join(' ')
   }, [words, currentWordIndex])
 
+  // Load documents for file list
+  const loadDocuments = useCallback(async () => {
+    if (!user) return
+
+    const { data: docs } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('last_read_at', { ascending: false, nullsFirst: false })
+
+    if (docs) {
+      setDocuments(docs as Document[])
+    }
+
+    const { data: progress } = await supabase
+      .from('reading_progress')
+      .select('*')
+      .eq('user_id', user.id)
+
+    if (progress) {
+      const map: Record<string, ReadingProgress> = {}
+      ;(progress as ReadingProgress[]).forEach((p) => {
+        map[p.document_id] = p
+      })
+      setProgressMap(map)
+    }
+  }, [user, supabase])
+
+  // Handle back button - show file list
+  const handleBack = useCallback(() => {
+    if (user) {
+      loadDocuments()
+      setShowFileList(true)
+    } else {
+      router.push('/')
+    }
+  }, [user, loadDocuments, router])
+
+  // Handle tap on center to play/pause
+  const handleCenterTap = useCallback((e: React.MouseEvent) => {
+    // Only trigger if clicking on the word display area, not controls
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('input')) return
+    togglePlaying()
+  }, [togglePlaying])
+
+  // Switch to another document
+  const switchDocument = useCallback((docId: string) => {
+    setShowFileList(false)
+    router.push(`/read/${docId}`)
+  }, [router])
+
   if (loading) {
     return (
       <div
@@ -302,7 +388,8 @@ export default function ReadPage() {
         </p>
         <button
           onClick={() => router.push('/')}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+          className="px-4 py-2 text-white rounded-lg transition-colors hover:brightness-110"
+          style={{ backgroundColor: 'var(--accent-color)' }}
         >
           Go Home
         </button>
@@ -312,12 +399,16 @@ export default function ReadPage() {
 
   return (
     <div
-      className="h-screen relative overflow-hidden"
+      className="h-screen relative overflow-hidden cursor-pointer"
       style={{ backgroundColor: theme === 'dark' ? '#0F0F1A' : '#FAFAFA' }}
+      onClick={handleCenterTap}
     >
       {/* Back button */}
       <button
-        onClick={() => router.push(user ? '/library' : '/')}
+        onClick={(e) => {
+          e.stopPropagation()
+          handleBack()
+        }}
         className="absolute top-4 left-4 z-30 p-2 rounded-lg transition-colors"
         style={{
           backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
@@ -335,7 +426,7 @@ export default function ReadPage() {
       {/* Control bar */}
       <ControlBar
         onSettingsClick={() => setShowSettings(true)}
-        onCatchMeUpClick={() => setShowCatchMeUp(true)}
+        onCatchMeUpClick={user ? () => setShowCatchMeUp(true) : undefined}
       />
 
       {/* Settings panel */}
@@ -348,9 +439,104 @@ export default function ReadPage() {
       <CatchMeUpModal
         isOpen={showCatchMeUp}
         onClose={() => setShowCatchMeUp(false)}
+        onContinueReading={() => {
+          if (!isPlaying) togglePlaying()
+        }}
         textToSummarize={getTextToSummarize()}
+        documentId={id}
+        wordIndex={currentWordIndex}
         isDark={theme === 'dark'}
       />
+
+      {/* File list overlay */}
+      {showFileList && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowFileList(false)}
+        >
+          <div
+            className="absolute left-0 top-0 bottom-0 w-80 bg-[#1A1A2E] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">Your Documents</h2>
+              <button
+                onClick={() => setShowFileList(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+
+            <div className="p-2">
+              {documents.length === 0 ? (
+                <div className="p-4 text-center text-white/40">
+                  No documents yet
+                </div>
+              ) : (
+                documents.map((doc) => {
+                  const progress = progressMap[doc.id]
+                  const progressPercent = progress && doc.word_count > 0
+                    ? Math.round((progress.word_index / doc.word_count) * 100)
+                    : 0
+                  const isCurrentDoc = doc.id === id
+
+                  return (
+                    <button
+                      key={doc.id}
+                      onClick={() => switchDocument(doc.id)}
+                      className={`w-full p-3 rounded-lg text-left transition-colors mb-1 ${
+                        isCurrentDoc
+                          ? 'border'
+                          : 'hover:bg-white/5'
+                      }`}
+                      style={isCurrentDoc ? { backgroundColor: 'rgba(var(--accent-rgb), 0.2)', borderColor: 'rgba(var(--accent-rgb), 0.3)' } : undefined}
+                    >
+                      <div className="flex items-start gap-3">
+                        <BookOpen className="w-5 h-5 text-white/40 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-medium truncate">
+                            {doc.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                              <div
+                                className="h-full"
+                                style={{ width: `${progressPercent}%`, backgroundColor: 'var(--accent-color)' }}
+                              />
+                            </div>
+                            <span className="text-xs text-white/40">
+                              {progressPercent}%
+                            </span>
+                          </div>
+                          <p className="text-xs text-white/40 mt-1">
+                            {doc.word_count.toLocaleString()} words
+                          </p>
+                        </div>
+                        {isCurrentDoc && (
+                          <Play className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--accent-color)' }} />
+                        )}
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+
+            <div className="p-4 border-t border-white/10">
+              <button
+                onClick={() => {
+                  setShowFileList(false)
+                  router.push('/')
+                }}
+                className="w-full py-2 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                Back to Home →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -77,7 +77,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-red-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent transition-colors"
               placeholder="you@example.com"
             />
           </div>
@@ -95,7 +95,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-red-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent transition-colors"
               placeholder="••••••••"
             />
           </div>
@@ -116,7 +116,8 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 hover:brightness-110 disabled:opacity-50"
+          style={{ backgroundColor: 'var(--accent-color)' }}
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {mode === 'signin' ? 'Sign In' : 'Sign Up'}

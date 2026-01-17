@@ -6,11 +6,22 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface TimingSettings {
+  longWordThreshold: number    // chars before extra time (default: 6)
+  msPerExtraChar: number       // ms per extra character (default: 20)
+  sentencePauseMs: number      // pause after . ! ? (default: 150)
+  clausePauseMs: number        // pause after , ; : (default: 75)
+}
+
 export interface UserPreferences {
   anchor_position: number
+  screen_position: number
   default_speed: number
   theme: 'dark' | 'light'
   font_size: number
+  anchor_color: string
+  timing: TimingSettings
+  free_summary_credits: number
 }
 
 export interface Database {
@@ -149,6 +160,32 @@ export interface Database {
           created_at?: string
         }
       }
+      summaries: {
+        Row: {
+          id: string
+          document_id: string
+          user_id: string
+          word_index: number
+          summary_text: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          document_id: string
+          user_id: string
+          word_index: number
+          summary_text: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          document_id?: string
+          user_id?: string
+          word_index?: number
+          summary_text?: string
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -158,3 +195,4 @@ export type Document = Database['public']['Tables']['documents']['Row']
 export type ReadingProgress = Database['public']['Tables']['reading_progress']['Row']
 export type ReadingSession = Database['public']['Tables']['reading_sessions']['Row']
 export type ApiKey = Database['public']['Tables']['api_keys']['Row']
+export type Summary = Database['public']['Tables']['summaries']['Row']

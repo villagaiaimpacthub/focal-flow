@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useState } from 'react'
-import { Upload, FileText, Loader2 } from 'lucide-react'
+import { useCallback, useState, useRef } from 'react'
+import { Upload, Loader2, AlertCircle } from 'lucide-react'
 import { parseFile, ACCEPTED_FILE_TYPES } from '@/lib/parsers'
 
 interface FileUploadProps {
@@ -14,9 +14,9 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ onFileProcessed, isDark = true }: FileUploadProps) {
-  const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(async (file: File) => {
     setError(null)
@@ -32,89 +32,61 @@ export function FileUpload({ onFileProcessed, isDark = true }: FileUploadProps) 
     }
   }, [onFileProcessed])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-
-    const file = e.dataTransfer.files[0]
-    if (file) {
-      handleFile(file)
-    }
-  }, [handleFile])
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
-
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       handleFile(file)
     }
+    // Reset input so same file can be selected again
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
   }, [handleFile])
 
+  const handleClick = () => {
+    inputRef.current?.click()
+  }
+
   return (
-    <div
-      className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-        isDragging
-          ? 'border-red-500 bg-red-500/10'
-          : isDark
-          ? 'border-white/20 hover:border-white/40'
-          : 'border-gray-300 hover:border-gray-400'
-      }`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
+    <div className="flex flex-col items-center gap-4">
       <input
+        ref={inputRef}
         type="file"
         accept={ACCEPTED_FILE_TYPES}
         onChange={handleInputChange}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        className="hidden"
         disabled={isProcessing}
       />
 
-      <div className="flex flex-col items-center gap-4">
+      <button
+        onClick={handleClick}
+        disabled={isProcessing}
+        className="flex items-center gap-3 px-6 py-4 rounded-xl text-white font-medium transition-all hover:brightness-110 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+        style={{ backgroundColor: 'var(--accent-color)' }}
+      >
         {isProcessing ? (
-          <Loader2
-            className="w-12 h-12 animate-spin"
-            style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}
-          />
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </>
         ) : (
-          <Upload
-            className="w-12 h-12"
-            style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}
-          />
+          <>
+            <Upload className="w-5 h-5" />
+            Choose File
+          </>
         )}
+      </button>
 
-        <div>
-          <p
-            className="text-lg font-medium"
-            style={{ color: isDark ? '#FFFFFF' : '#1A1A1A' }}
-          >
-            {isProcessing ? 'Processing...' : 'Drop a file here or click to browse'}
-          </p>
-          <p
-            className="text-sm mt-1"
-            style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}
-          >
-            Supports TXT, Markdown, and PDF files
-          </p>
+      <p className={`text-sm ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
+        PDF, TXT, or Markdown
+      </p>
+
+      {error && (
+        <div className="flex items-center gap-2 text-red-400 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          {error}
         </div>
-
-        {error && (
-          <div className="flex items-center gap-2 text-red-500 text-sm">
-            <FileText className="w-4 h-4" />
-            {error}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

@@ -1,16 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Rewind,
-  Settings,
-  ChevronUp,
-  ChevronDown
-} from 'lucide-react'
+import { ChevronUp, ChevronDown, Settings, Play, Pause, SkipBack, SkipForward, Sparkles } from 'lucide-react'
 import { useReaderStore } from '@/store/reader'
 
 interface ControlBarProps {
@@ -25,17 +16,26 @@ export function ControlBar({ onSettingsClick, onCatchMeUpClick }: ControlBarProp
     speed,
     setSpeed,
     adjustSpeed,
-    anchorPosition,
-    setAnchorPosition,
     words,
     currentWordIndex,
     skipForward,
     skipBackward,
-    rewind
+    theme
   } = useReaderStore()
 
   const [isVisible, setIsVisible] = useState(true)
   const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Auto-hide controls during playback
   useEffect(() => {
@@ -49,8 +49,8 @@ export function ControlBar({ onSettingsClick, onCatchMeUpClick }: ControlBarProp
     }
   }, [isPlaying])
 
-  // Show controls on mouse movement
-  const handleMouseMove = useCallback(() => {
+  // Show controls on mouse movement or touch
+  const handleInteraction = useCallback(() => {
     setIsVisible(true)
     if (hideTimeout) clearTimeout(hideTimeout)
     if (isPlaying) {
@@ -62,7 +62,6 @@ export function ControlBar({ onSettingsClick, onCatchMeUpClick }: ControlBarProp
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return
       }
@@ -96,147 +95,213 @@ export function ControlBar({ onSettingsClick, onCatchMeUpClick }: ControlBarProp
     }
 
     window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousemove', handleInteraction)
+    window.addEventListener('touchstart', handleInteraction)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mousemove', handleInteraction)
+      window.removeEventListener('touchstart', handleInteraction)
     }
-  }, [togglePlaying, adjustSpeed, skipForward, skipBackward, handleMouseMove, onCatchMeUpClick])
+  }, [togglePlaying, adjustSpeed, skipForward, skipBackward, handleInteraction, onCatchMeUpClick])
 
   const progress = words.length > 0
     ? ((currentWordIndex + 1) / words.length) * 100
     : 0
 
-  const estimatedTimeRemaining = words.length > 0 && speed > 0
-    ? Math.ceil((words.length - currentWordIndex) / speed)
-    : 0
+  const bgColor = theme === 'dark' ? 'bg-white/10' : 'bg-black/10'
+  const hoverBgColor = theme === 'dark' ? 'hover:bg-white/20' : 'hover:bg-black/20'
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900'
+  const textMutedColor = theme === 'dark' ? 'text-white/60' : 'text-gray-600'
 
   return (
-    <div
-      className={`absolute bottom-0 left-0 right-0 transition-opacity duration-300 ${
-        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      }`}
-      style={{
-        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)'
-      }}
-    >
-      {/* Progress bar */}
-      <div className="w-full h-1 bg-white/10">
+    <>
+      {/* Progress bar at bottom */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-1.5 md:h-1 transition-opacity duration-300 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          paddingBottom: 'var(--safe-area-inset-bottom)'
+        }}
+      >
         <div
-          className="h-full bg-red-500 transition-all duration-75"
-          style={{ width: `${progress}%` }}
+          className="h-full transition-all duration-75"
+          style={{ width: `${progress}%`, backgroundColor: 'var(--accent-color)' }}
         />
       </div>
 
-      <div className="p-4 flex items-center justify-between gap-4">
-        {/* Left section - Playback controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => rewind(15)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            title="Rewind 15s"
+      {/* Mobile: Bottom control bar */}
+      {isMobile ? (
+        <div
+          className={`absolute bottom-0 left-0 right-0 transition-all duration-300 ${
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+          }`}
+          style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom) + 8px)' }}
+        >
+          {/* Main controls bar */}
+          <div className="flex items-center justify-between px-4 py-3 mx-3 mb-2 rounded-2xl backdrop-blur-lg"
+            style={{ backgroundColor: theme === 'dark' ? 'rgba(26, 26, 46, 0.95)' : 'rgba(255, 255, 255, 0.95)' }}
           >
-            <Rewind className="w-5 h-5 text-white" />
-          </button>
-
-          <button
-            onClick={skipBackward}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            title="Previous sentence (Left arrow)"
-          >
-            <SkipBack className="w-5 h-5 text-white" />
-          </button>
-
-          <button
-            onClick={togglePlaying}
-            className="p-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
-            title="Play/Pause (Space)"
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6 text-white" />
-            ) : (
-              <Play className="w-6 h-6 text-white ml-0.5" />
-            )}
-          </button>
-
-          <button
-            onClick={skipForward}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            title="Next sentence (Right arrow)"
-          >
-            <SkipForward className="w-5 h-5 text-white" />
-          </button>
-        </div>
-
-        {/* Center section - Speed control */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+            {/* Left: Settings */}
             <button
-              onClick={() => adjustSpeed(-50)}
-              className="p-1 rounded hover:bg-white/10"
-              title="Decrease speed (Down arrow)"
+              onClick={onSettingsClick}
+              className={`touch-target flex items-center justify-center rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              title="Settings"
             >
-              <ChevronDown className="w-4 h-4 text-white" />
+              <Settings className={`w-6 h-6 ${textColor}`} />
             </button>
 
-            <div className="flex flex-col items-center min-w-[80px]">
-              <span className="text-white text-lg font-mono font-bold">
-                {speed}
-              </span>
-              <span className="text-white/60 text-xs">WPM</span>
+            {/* Center: Playback controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={skipBackward}
+                className={`touch-target flex items-center justify-center rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+                title="Previous sentence"
+              >
+                <SkipBack className={`w-5 h-5 ${textColor}`} />
+              </button>
+
+              <button
+                onClick={togglePlaying}
+                className="touch-target flex items-center justify-center rounded-full transition-colors text-white"
+                style={{ backgroundColor: 'var(--accent-color)', minWidth: '56px', minHeight: '56px' }}
+                title={isPlaying ? 'Pause' : 'Play'}
+              >
+                {isPlaying ? (
+                  <Pause className="w-7 h-7" />
+                ) : (
+                  <Play className="w-7 h-7 ml-1" />
+                )}
+              </button>
+
+              <button
+                onClick={skipForward}
+                className={`touch-target flex items-center justify-center rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+                title="Next sentence"
+              >
+                <SkipForward className={`w-5 h-5 ${textColor}`} />
+              </button>
             </div>
 
-            <button
-              onClick={() => adjustSpeed(50)}
-              className="p-1 rounded hover:bg-white/10"
-              title="Increase speed (Up arrow)"
-            >
-              <ChevronUp className="w-4 h-4 text-white" />
-            </button>
+            {/* Right: Speed control */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => adjustSpeed(-50)}
+                className={`w-9 h-9 flex items-center justify-center rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              >
+                <ChevronDown className={`w-5 h-5 ${textColor}`} />
+              </button>
+              <div className={`px-2 py-1 rounded-lg ${bgColor} min-w-[60px] text-center`}>
+                <span className={`font-mono font-bold text-sm ${textColor}`}>{speed}</span>
+              </div>
+              <button
+                onClick={() => adjustSpeed(50)}
+                className={`w-9 h-9 flex items-center justify-center rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              >
+                <ChevronUp className={`w-5 h-5 ${textColor}`} />
+              </button>
+            </div>
           </div>
 
-          <input
-            type="range"
-            min={100}
-            max={1200}
-            step={50}
-            value={speed}
-            onChange={(e) => setSpeed(parseInt(e.target.value))}
-            className="w-32 accent-red-500"
-          />
-        </div>
-
-        {/* Right section - Progress & Settings */}
-        <div className="flex items-center gap-4">
-          <div className="text-white/80 text-sm font-mono">
-            {currentWordIndex + 1} / {words.length}
-            {estimatedTimeRemaining > 0 && (
-              <span className="text-white/50 ml-2">
-                ~{estimatedTimeRemaining} min left
-              </span>
-            )}
-          </div>
-
+          {/* Catch Me Up button (when available) */}
           {onCatchMeUpClick && currentWordIndex > 0 && (
             <button
               onClick={onCatchMeUpClick}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
-              title="Get AI summary (S)"
+              className="flex items-center justify-center gap-2 mx-3 mb-2 px-4 py-3 rounded-xl text-white text-sm font-medium transition-colors w-[calc(100%-24px)]"
+              style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.2)' }}
             >
-              Catch Me Up
+              <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-color)' }} />
+              <span style={{ color: 'var(--accent-color)' }}>Catch Me Up</span>
             </button>
           )}
-
-          <button
-            onClick={onSettingsClick}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            title="Settings"
-          >
-            <Settings className="w-5 h-5 text-white" />
-          </button>
         </div>
+      ) : (
+        /* Desktop: Original layout with improvements */
+        <>
+          {/* WPM control - bottom right, vertical */}
+          <div
+            className={`absolute bottom-8 right-6 flex flex-col items-center gap-2 transition-opacity duration-300 ${
+              isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <button
+              onClick={() => adjustSpeed(50)}
+              className={`p-3 rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              title="Increase speed (Up arrow)"
+            >
+              <ChevronUp className={`w-5 h-5 ${textColor}`} />
+            </button>
+
+            {/* Vertical slider */}
+            <div className="relative h-32 flex items-center">
+              <input
+                type="range"
+                min={100}
+                max={1200}
+                step={50}
+                value={speed}
+                onChange={(e) => setSpeed(parseInt(e.target.value))}
+                className="absolute w-32"
+                style={{
+                  transform: 'rotate(-90deg)',
+                  transformOrigin: 'center center'
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => adjustSpeed(-50)}
+              className={`p-3 rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              title="Decrease speed (Down arrow)"
+            >
+              <ChevronDown className={`w-5 h-5 ${textColor}`} />
+            </button>
+
+            {/* WPM display */}
+            <div className={`flex flex-col items-center mt-2 px-3 py-2 rounded-lg ${bgColor}`}>
+              <span className={`${textColor} text-lg font-mono font-bold`}>{speed}</span>
+              <span className={`${textMutedColor} text-xs`}>WPM</span>
+            </div>
+          </div>
+
+          {/* Settings button - bottom left */}
+          <div
+            className={`absolute bottom-8 left-6 flex items-center gap-3 transition-opacity duration-300 ${
+              isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <button
+              onClick={onSettingsClick}
+              className={`p-3 rounded-full ${bgColor} ${hoverBgColor} transition-colors`}
+              title="Settings"
+            >
+              <Settings className={`w-5 h-5 ${textColor}`} />
+            </button>
+
+            {onCatchMeUpClick && currentWordIndex > 0 && (
+              <button
+                onClick={onCatchMeUpClick}
+                className={`px-4 py-2 rounded-full ${bgColor} ${hoverBgColor} ${textColor} text-sm transition-colors`}
+                title="Get AI summary (S)"
+              >
+                Catch Me Up
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Word count - top right */}
+      <div
+        className={`absolute top-4 right-4 ${textMutedColor} text-sm font-mono transition-opacity duration-300 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{ paddingTop: 'var(--safe-area-inset-top)' }}
+      >
+        {currentWordIndex + 1} / {words.length}
       </div>
-    </div>
+    </>
   )
 }
