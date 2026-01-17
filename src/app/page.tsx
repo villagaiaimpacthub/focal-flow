@@ -271,7 +271,7 @@ function HomeContent() {
         <header className="flex-shrink-0 border-b border-white/10">
           <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
             <span className="text-lg font-bold text-white">
-              Flow<span style={{ color: 'var(--accent-color)' }}>R</span>eader
+              Focal<span style={{ color: 'var(--accent-color)' }}>F</span>low
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -565,7 +565,7 @@ function HomeContent() {
       <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-lg bg-[#0F0F1A]/80 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold">Flow<span style={{ color: 'var(--accent-color)' }}>R</span>eader</span>
+            <span className="text-xl font-bold">Focal<span style={{ color: 'var(--accent-color)' }}>F</span>low</span>
           </div>
           <button
             onClick={() => setShowAuth(true)}

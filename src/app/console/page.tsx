@@ -113,7 +113,7 @@ export default function ConsolePage() {
             Back
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-bold">Flow<span style={{ color: 'var(--accent-color)' }}>R</span>eader</span>
+            <span className="font-bold">Focal<span style={{ color: 'var(--accent-color)' }}>F</span>low</span>
             <span className="text-white/40 mx-2">|</span>
             <span className="font-medium text-white/70">Console</span>
           </div>

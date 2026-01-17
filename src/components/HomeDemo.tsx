@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Play, Pause } from 'lucide-react'
 
-const DEMO_TEXT = `Speed reading is a skill that can be developed with practice. FlowReader uses RSVP technology to display one word at a time, allowing your brain to focus without eye movement. Most people can comfortably read at 300 to 500 words per minute. With practice, you can reach even higher speeds while maintaining comprehension.`
+const DEMO_TEXT = `Speed reading is a skill that can be developed with practice. FocalFlow uses RSVP technology to display one word at a time, allowing your brain to focus without eye movement. Most people can comfortably read at 300 to 500 words per minute. With practice, you can reach even higher speeds while maintaining comprehension.`
 
 const SPEED_PRESETS = [
   { label: 'Slow', wpm: 200 },

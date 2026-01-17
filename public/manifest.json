@@ -1,7 +1,7 @@
 {
-  "name": "FlowReader",
-  "short_name": "FlowReader",
-  "description": "RSVP Speed Reading Application - Read at 300-900+ WPM",
+  "name": "FocalFlow",
+  "short_name": "FocalFlow",
+  "description": "RSVP Speed Reading - Read at 300-900+ WPM",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F0F1A",

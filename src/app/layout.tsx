@@ -14,13 +14,13 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "FlowReader - RSVP Speed Reading",
+  title: "FocalFlow - RSVP Speed Reading",
   description: "Read at 300-900+ words per minute with Rapid Serial Visual Presentation",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FlowReader",
+    title: "FocalFlow",
   },
 }
 

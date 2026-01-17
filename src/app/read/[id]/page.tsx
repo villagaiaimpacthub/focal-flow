@@ -72,7 +72,7 @@ export default function ReadPage() {
     const loadDocument = async () => {
       if (id === 'temp') {
         // Load from localStorage for non-authenticated users
-        const tempDoc = localStorage.getItem('flowreader-temp-doc')
+        const tempDoc = localStorage.getItem('focalflow-temp-doc')
         if (tempDoc) {
           const { title, words: docWords } = JSON.parse(tempDoc)
           setDocument(null, title, docWords)
@@ -249,7 +249,7 @@ export default function ReadPage() {
 
         // Note: sendBeacon doesn't work with Supabase directly, so we save via localStorage
         // and sync on next load as a fallback
-        localStorage.setItem(`flowreader-unsaved-progress-${id}`, data)
+        localStorage.setItem(`focalflow-unsaved-progress-${id}`, data)
       }
 
       // Also try to save session
@@ -257,7 +257,7 @@ export default function ReadPage() {
         const session = sessionStartRef.current
         const duration = Math.floor((Date.now() - session.time) / 1000)
         if (duration > 5) {
-          localStorage.setItem(`flowreader-unsaved-session-${id}`, JSON.stringify({
+          localStorage.setItem(`focalflow-unsaved-session-${id}`, JSON.stringify({
             user_id: userRef.current.id,
             document_id: id,
             start_index: session.index,
@@ -283,21 +283,21 @@ export default function ReadPage() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Check for unsaved progress from previous session
-    const unsavedProgress = localStorage.getItem(`flowreader-unsaved-progress-${id}`)
+    const unsavedProgress = localStorage.getItem(`focalflow-unsaved-progress-${id}`)
     if (unsavedProgress && user) {
       const data = JSON.parse(unsavedProgress)
       if (data.user_id === user.id) {
         saveProgress(data.word_index, data.speed)
-        localStorage.removeItem(`flowreader-unsaved-progress-${id}`)
+        localStorage.removeItem(`focalflow-unsaved-progress-${id}`)
       }
     }
 
-    const unsavedSession = localStorage.getItem(`flowreader-unsaved-session-${id}`)
+    const unsavedSession = localStorage.getItem(`focalflow-unsaved-session-${id}`)
     if (unsavedSession && user) {
       const data = JSON.parse(unsavedSession)
       if (data.user_id === user.id) {
         supabase.from('reading_sessions').insert(data as never)
-        localStorage.removeItem(`flowreader-unsaved-session-${id}`)
+        localStorage.removeItem(`focalflow-unsaved-session-${id}`)
       }
     }
 

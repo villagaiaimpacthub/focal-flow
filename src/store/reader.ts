@@ -238,7 +238,7 @@ export const useReaderStore = create<ReaderState>()(
       })
     }),
     {
-      name: 'flowreader-settings',
+      name: 'focalflow-settings',
       partialize: (state) => ({
         speed: state.speed,
         anchorPosition: state.anchorPosition,
