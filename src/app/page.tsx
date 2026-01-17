@@ -485,10 +485,10 @@ function HomeContent() {
         {documents.length > 0 && (
           <button
             onClick={() => setShowUpload(true)}
-            className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white hover:brightness-110 hover:scale-105 transition-all z-40"
+            className="fixed right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white hover:brightness-110 hover:scale-105 transition-all z-40"
             style={{
               backgroundColor: 'var(--accent-color)',
-              bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))'
+              bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))'
             }}
             title="Upload document"
           >
