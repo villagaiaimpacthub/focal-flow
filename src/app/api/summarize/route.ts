@@ -7,6 +7,11 @@ import type { UserPreferences } from '@/types/database'
 const SUMMARY_PROMPT = 'Provide a concise summary of the following text in one paragraph, covering the key points and main ideas:'
 
 const DEFAULT_FREE_CREDITS = 10
+const RATE_LIMIT_SECONDS = 10 // Minimum seconds between requests
+
+// Simple in-memory rate limiter (per-instance, resets on cold start)
+// For production, use Redis/Upstash for distributed rate limiting
+const rateLimitMap = new Map<string, number>()
 
 async function generateSummary(
   apiKey: string,
@@ -44,6 +49,28 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Rate limiting (by user ID or IP)
+    const rateLimitKey = user?.id || request.headers.get('x-forwarded-for') || 'anonymous'
+    const now = Date.now()
+    const lastRequest = rateLimitMap.get(rateLimitKey)
+
+    if (lastRequest && (now - lastRequest) < RATE_LIMIT_SECONDS * 1000) {
+      const waitTime = Math.ceil((RATE_LIMIT_SECONDS * 1000 - (now - lastRequest)) / 1000)
+      return NextResponse.json(
+        { error: `Please wait ${waitTime} seconds before requesting another summary.` },
+        { status: 429 }
+      )
+    }
+    rateLimitMap.set(rateLimitKey, now)
+
+    // Clean up old entries (prevent memory leak)
+    if (rateLimitMap.size > 10000) {
+      const cutoff = now - RATE_LIMIT_SECONDS * 1000 * 2
+      for (const [key, time] of rateLimitMap.entries()) {
+        if (time < cutoff) rateLimitMap.delete(key)
+      }
+    }
 
     const textToSummarize = text.slice(0, 100000) // Limit to ~100k chars
 

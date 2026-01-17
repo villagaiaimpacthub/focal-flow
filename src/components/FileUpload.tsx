@@ -13,6 +13,8 @@ interface FileUploadProps {
   isDark?: boolean
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
 export function FileUpload({ onFileProcessed, isDark = true }: FileUploadProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +22,13 @@ export function FileUpload({ onFileProcessed, isDark = true }: FileUploadProps) 
 
   const handleFile = useCallback(async (file: File) => {
     setError(null)
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File too large. Maximum size is 10MB.')
+      return
+    }
+
     setIsProcessing(true)
 
     try {
