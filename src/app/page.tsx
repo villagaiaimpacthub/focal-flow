@@ -653,7 +653,7 @@ function HomeContent() {
           <span>Open Source</span>
           <span className="mx-2">·</span>
           <a
-            href="https://github.com"
+            href="https://github.com/villagaiaimpacthub/flow-reader"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-white transition-colors"
