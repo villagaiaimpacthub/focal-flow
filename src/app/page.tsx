@@ -561,7 +561,7 @@ function HomeContent() {
             <span>Open Source</span>
             <span className="mx-2">·</span>
             <a
-              href="https://github.com/villagaiaimpacthub/flow-reader"
+              href="https://github.com/villagaiaimpacthub/focal-flow"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-white transition-colors"
@@ -669,7 +669,7 @@ function HomeContent() {
           <span>Open Source</span>
           <span className="mx-2">·</span>
           <a
-            href="https://github.com/villagaiaimpacthub/flow-reader"
+            href="https://github.com/villagaiaimpacthub/focal-flow"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-white transition-colors"
