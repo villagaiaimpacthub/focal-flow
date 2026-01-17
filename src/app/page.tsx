@@ -554,6 +554,22 @@ function HomeContent() {
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <footer className="flex-shrink-0 border-t border-white/10 py-4 px-4">
+          <div className="max-w-lg mx-auto text-center text-xs text-white/40">
+            <span>Open Source</span>
+            <span className="mx-2">·</span>
+            <a
+              href="https://github.com/villagaiaimpacthub/flow-reader"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+        </footer>
       </div>
     )
   }
