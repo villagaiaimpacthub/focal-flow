@@ -12,10 +12,13 @@ import { HomeDemo } from '@/components/HomeDemo'
 import { AuthForm } from '@/components/AuthForm'
 import { FileUpload } from '@/components/FileUpload'
 import { CatchMeUpModal } from '@/components/CatchMeUpModal'
+import { PreReadModal } from '@/components/PreReadModal'
 import { usePreferencesSync } from '@/hooks/usePreferencesSync'
+import { useAudioStore } from '@/store/audio'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { Document, ReadingProgress, ReadingSession } from '@/types/database'
+import type { AudioSelection } from '@/types/spotify'
 
 type SortBy = 'recent' | 'alphabetical' | 'progress'
 
@@ -45,6 +48,10 @@ function HomeContent() {
   const [showSearch, setShowSearch] = useState(false)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [catchMeUpDoc, setCatchMeUpDoc] = useState<Document | null>(null)
+  const [preReadDoc, setPreReadDoc] = useState<Document | null>(null)
+
+  // Audio store for pre-read modal
+  const { startAmbientSound, startSpotifyPlaylist, startCustomPlaylist, setLastAudioSelection, playlists } = useAudioStore()
 
   // User preferences
   const [hasApiKey, setHasApiKey] = useState(false)
@@ -153,7 +160,28 @@ function HomeContent() {
   }, [activeMenu])
 
   const handleSelectDocument = (doc: Document) => {
-    router.push(`/read/${doc.id}`)
+    setPreReadDoc(doc)
+  }
+
+  const handleStartReading = (selection: AudioSelection) => {
+    if (!preReadDoc) return
+
+    // Start audio based on selection
+    if (selection.type === 'ambient' && selection.ambientSound) {
+      startAmbientSound(selection.ambientSound)
+    } else if (selection.type === 'custom' && selection.customPlaylist) {
+      startCustomPlaylist(selection.customPlaylist)
+    } else if (selection.type === 'spotify' && selection.spotifyPlaylistUri) {
+      // Find the playlist in the store
+      const playlist = playlists.find(p => p.uri === selection.spotifyPlaylistUri)
+      if (playlist) {
+        startSpotifyPlaylist(playlist)
+      }
+    }
+
+    // Navigate to read page
+    router.push(`/read/${preReadDoc.id}`)
+    setPreReadDoc(null)
   }
 
   const handleFileProcessed = async (result: {
@@ -533,6 +561,14 @@ function HomeContent() {
           documentId={catchMeUpDoc?.id || ''}
           wordIndex={catchMeUpDoc ? (progressMap[catchMeUpDoc.id]?.word_index || 0) : 0}
           isDark={true}
+        />
+
+        {/* Pre-Read Modal */}
+        <PreReadModal
+          isOpen={!!preReadDoc}
+          onClose={() => setPreReadDoc(null)}
+          onStart={handleStartReading}
+          documentTitle={preReadDoc?.title || ''}
         />
 
         {/* Toast notification */}

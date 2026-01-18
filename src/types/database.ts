@@ -186,6 +186,44 @@ export interface Database {
           created_at?: string
         }
       }
+      spotify_connections: {
+        Row: {
+          id: string
+          user_id: string
+          access_token: string
+          refresh_token: string
+          expires_at: string
+          spotify_user_id: string | null
+          spotify_display_name: string | null
+          spotify_product: 'premium' | 'free' | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          access_token: string
+          refresh_token: string
+          expires_at: string
+          spotify_user_id?: string | null
+          spotify_display_name?: string | null
+          spotify_product?: 'premium' | 'free' | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          access_token?: string
+          refresh_token?: string
+          expires_at?: string
+          spotify_user_id?: string | null
+          spotify_display_name?: string | null
+          spotify_product?: 'premium' | 'free' | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
@@ -196,3 +234,17 @@ export type ReadingProgress = Database['public']['Tables']['reading_progress']['
 export type ReadingSession = Database['public']['Tables']['reading_sessions']['Row']
 export type ApiKey = Database['public']['Tables']['api_keys']['Row']
 export type Summary = Database['public']['Tables']['summaries']['Row']
+
+// Spotify Connection type (stored in spotify_connections table)
+export interface SpotifyConnection {
+  id: string
+  user_id: string
+  access_token: string
+  refresh_token: string
+  expires_at: string
+  spotify_user_id: string | null
+  spotify_display_name: string | null
+  spotify_product: 'premium' | 'free' | null
+  created_at: string
+  updated_at: string
+}

@@ -9,7 +9,10 @@ import { WordDisplay } from '@/components/WordDisplay'
 import { ControlBar } from '@/components/ControlBar'
 import { SettingsPanel } from '@/components/SettingsPanel'
 import { CatchMeUpModal } from '@/components/CatchMeUpModal'
+import { AudioPlayer } from '@/components/AudioPlayer'
 import { useReaderStore, getWordDisplayTime } from '@/store/reader'
+import { useAudioStore } from '@/store/audio'
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer'
 import { usePreferencesSync } from '@/hooks/usePreferencesSync'
 import { useSwipeGesture } from '@/hooks/useSwipeGesture'
 import { createClient } from '@/lib/supabase/client'
@@ -33,6 +36,10 @@ export default function ReadPage() {
 
   // Sync preferences with database for authenticated users
   usePreferencesSync(user)
+
+  // Audio store - AudioPlayer component handles the actual playback
+  const { currentAudioType, stopAudio } = useAudioStore()
+  useSpotifyPlayer()
 
   const {
     words,
@@ -447,6 +454,9 @@ export default function ReadPage() {
         wordIndex={currentWordIndex}
         isDark={theme === 'dark'}
       />
+
+      {/* Audio player - only visible when audio is playing */}
+      {currentAudioType !== 'none' && <AudioPlayer />}
 
       {/* File list overlay */}
       {showFileList && (
