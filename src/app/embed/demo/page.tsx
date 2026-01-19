@@ -142,14 +142,16 @@ function EmbedDemoContent() {
   // Compact mode: just the word display, no controls
   if (isCompact) {
     return (
-      <div className="w-full h-screen bg-[#0F0F1A] flex items-center justify-center overflow-hidden">
-        <WordDisplay
-          word={words[currentIndex]}
-          fontSize={fontSize}
-          anchorPosition={anchorPosition}
-          screenPosition={screenPosition}
-          anchorColor={anchorColor}
-        />
+      <div className="w-full h-screen bg-[#0F0F1A] overflow-hidden">
+        <div className="w-full h-full relative">
+          <WordDisplay
+            word={words[currentIndex]}
+            fontSize={fontSize}
+            anchorPosition={anchorPosition}
+            screenPosition={screenPosition}
+            anchorColor={anchorColor}
+          />
+        </div>
       </div>
     )
   }
