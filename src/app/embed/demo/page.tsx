@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Play, Pause, Minus, Plus } from 'lucide-react'
 
 // Sample text about productivity and reading
@@ -73,14 +74,17 @@ function WordDisplay({
   )
 }
 
-export default function EmbedDemoPage() {
+function EmbedDemoContent() {
+  const searchParams = useSearchParams()
+  const isCompact = searchParams.get('compact') === 'true'
+
   const [words] = useState(() => parseText(SAMPLE_TEXT))
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [wpm, setWpm] = useState(300)
 
-  // Settings
-  const fontSize = 48
+  // Settings - smaller font for compact mode (~360x180 viewport)
+  const fontSize = isCompact ? 24 : 48
   const anchorPosition = 0.35
   const screenPosition = 0.5
   const anchorColor = '#E53E3E'
@@ -134,6 +138,21 @@ export default function EmbedDemoPage() {
 
   // Progress percentage
   const progress = ((currentIndex + 1) / words.length) * 100
+
+  // Compact mode: just the word display, no controls
+  if (isCompact) {
+    return (
+      <div className="w-full h-screen bg-[#0F0F1A] flex items-center justify-center overflow-hidden">
+        <WordDisplay
+          word={words[currentIndex]}
+          fontSize={fontSize}
+          anchorPosition={anchorPosition}
+          screenPosition={screenPosition}
+          anchorColor={anchorColor}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="w-full h-screen bg-[#0F0F1A] flex flex-col overflow-hidden">
@@ -195,5 +214,13 @@ export default function EmbedDemoPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function EmbedDemoPage() {
+  return (
+    <Suspense fallback={<div className="w-full h-screen bg-[#0F0F1A]" />}>
+      <EmbedDemoContent />
+    </Suspense>
   )
 }
