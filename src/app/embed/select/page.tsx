@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { BookOpen, Clock, ChevronRight, Play, Pause, Minus, Plus, ArrowLeft, FileText, File, BookMarked } from 'lucide-react'
 import { PreReadModal } from '@/components/PreReadModal'
 import { AudioPlayer } from '@/components/AudioPlayer'
@@ -131,6 +131,48 @@ export default function EmbedSelectPage() {
   const screenPosition = 0.5
   const anchorColor = '#E53E3E'
 
+  // Auto-hide controls
+  const [isControlsVisible, setIsControlsVisible] = useState(true)
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Auto-hide controls during playback
+  useEffect(() => {
+    if (view !== 'reading') return
+
+    if (isPlaying) {
+      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 3000)
+      return () => {
+        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+      }
+    } else {
+      setIsControlsVisible(true)
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+    }
+  }, [isPlaying, view])
+
+  // Show controls on interaction
+  const handleInteraction = useCallback(() => {
+    if (view !== 'reading') return
+    setIsControlsVisible(true)
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+    if (isPlaying) {
+      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 3000)
+    }
+  }, [isPlaying, view])
+
+  // Attach interaction listeners for reading view
+  useEffect(() => {
+    if (view !== 'reading') return
+
+    window.addEventListener('mousemove', handleInteraction)
+    window.addEventListener('touchstart', handleInteraction)
+
+    return () => {
+      window.removeEventListener('mousemove', handleInteraction)
+      window.removeEventListener('touchstart', handleInteraction)
+    }
+  }, [view, handleInteraction])
+
   // Handle document selection - show audio modal
   const handleSelectDocument = (doc: typeof SAMPLE_DOCUMENTS[0]) => {
     setSelectedDoc(doc)
@@ -223,7 +265,9 @@ export default function EmbedSelectPage() {
     return (
       <div className="w-full h-screen bg-[#0F0F1A] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
+        <div className={`flex items-center gap-3 px-4 py-3 border-b border-white/10 transition-all duration-300 ${
+          isControlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+        }`}>
           <button
             onClick={handleBack}
             className="p-2 -ml-2 rounded-lg hover:bg-white/10 transition-colors text-white/70"
@@ -248,7 +292,9 @@ export default function EmbedSelectPage() {
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 bg-white/10">
+        <div className={`h-1 bg-white/10 transition-opacity duration-300 ${
+          isControlsVisible ? 'opacity-100' : 'opacity-0'
+        }`}>
           <div
             className="h-full bg-[#E53E3E] transition-all duration-100"
             style={{ width: `${progress}%` }}
@@ -256,7 +302,9 @@ export default function EmbedSelectPage() {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between px-4 py-3 bg-white/5">
+        <div className={`flex items-center justify-between px-4 py-3 bg-white/5 transition-all duration-300 ${
+          isControlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+        }`}>
           <button
             onClick={togglePlay}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -292,7 +340,13 @@ export default function EmbedSelectPage() {
         </div>
 
         {/* Audio player */}
-        {hasAudio && <AudioPlayer />}
+        {hasAudio && (
+          <div className={`transition-all duration-300 ${
+            isControlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+          }`}>
+            <AudioPlayer />
+          </div>
+        )}
       </div>
     )
   }
