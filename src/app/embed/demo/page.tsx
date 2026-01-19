@@ -76,9 +76,8 @@ function WordDisplay({
 export default function EmbedDemoPage() {
   const [words] = useState(() => parseText(SAMPLE_TEXT))
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
   const [wpm, setWpm] = useState(300)
-  const [hasStarted, setHasStarted] = useState(false)
 
   // Settings
   const fontSize = 48
@@ -125,17 +124,8 @@ export default function EmbedDemoPage() {
     return () => clearTimeout(timeout)
   }, [isPlaying, currentIndex, words, getWordTime])
 
-  // Handle first interaction to start
-  const handleStart = () => {
-    if (!hasStarted) {
-      setHasStarted(true)
-      setIsPlaying(true)
-    }
-  }
-
   const togglePlay = () => {
     setIsPlaying(prev => !prev)
-    if (!hasStarted) setHasStarted(true)
   }
 
   const adjustWpm = (delta: number) => {
@@ -146,11 +136,7 @@ export default function EmbedDemoPage() {
   const progress = ((currentIndex + 1) / words.length) * 100
 
   return (
-    <div
-      className="w-full h-screen bg-[#0F0F1A] flex flex-col overflow-hidden"
-      onClick={!hasStarted ? handleStart : undefined}
-      style={{ cursor: !hasStarted ? 'pointer' : 'default' }}
-    >
+    <div className="w-full h-screen bg-[#0F0F1A] flex flex-col overflow-hidden">
       {/* Main word display area */}
       <div className="flex-1 relative min-h-0">
         <WordDisplay
@@ -160,18 +146,6 @@ export default function EmbedDemoPage() {
           screenPosition={screenPosition}
           anchorColor={anchorColor}
         />
-
-        {/* Click to start overlay */}
-        {!hasStarted && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                <Play className="w-8 h-8 text-white ml-1" />
-              </div>
-              <p className="text-white/70 text-sm">Click to start</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Progress bar */}
