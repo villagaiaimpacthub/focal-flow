@@ -85,9 +85,9 @@ function EmbedDemoContent() {
 
   // Settings - smaller font for compact mode (~360x180 viewport)
   const fontSize = isCompact ? 24 : 48
-  // Compact mode: shift word left (-0.05) and anchor right (+0.05) to center better
-  const anchorPosition = isCompact ? 0.40 : 0.35
-  const screenPosition = isCompact ? 0.45 : 0.5
+  // Compact mode: shift word left and anchor right to center better
+  const anchorPosition = isCompact ? 0.38 : 0.35
+  const screenPosition = isCompact ? 0.48 : 0.5
   const anchorColor = '#E53E3E'
 
   // Calculate timing based on WPM
