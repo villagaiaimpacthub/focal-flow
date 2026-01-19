@@ -140,7 +140,7 @@ export default function EmbedSelectPage() {
     if (view !== 'reading') return
 
     if (isPlaying) {
-      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 3000)
+      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 1500)
       return () => {
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
       }
@@ -156,7 +156,7 @@ export default function EmbedSelectPage() {
     setIsControlsVisible(true)
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
     if (isPlaying) {
-      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 3000)
+      hideTimeoutRef.current = setTimeout(() => setIsControlsVisible(false), 1500)
     }
   }, [isPlaying, view])
 
